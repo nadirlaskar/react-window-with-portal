@@ -1,6 +1,7 @@
 // @flow
 
 import memoizeOne from 'memoize-one';
+import { createPortal } from 'react-dom';
 import { createElement, PureComponent } from 'react';
 import { cancelTimeout, requestTimeout } from './timer';
 import { getRTLOffsetType } from './domHelpers';
@@ -59,6 +60,8 @@ export type Props<T> = {|
   children: RenderComponent<T>,
   className?: string,
   direction: Direction,
+  enablePortal?: boolean,
+  portalNode?: HTMLElement,
   height: number | string,
   initialScrollOffset?: number,
   innerRef?: any,
@@ -292,6 +295,8 @@ export default function createListComponent({
         children,
         className,
         direction,
+        enablePortal = false,
+        portalNode,
         height,
         innerRef,
         innerElementType,
@@ -339,6 +344,13 @@ export default function createListComponent({
         this.props,
         this._instanceProps
       );
+      let portaledItems = null
+      if(enablePortal && portalNode){
+        portaledItems = createPortal(
+          items,
+          portalNode
+        );
+      }
 
       return createElement(
         outerElementType || outerTagName || 'div',
@@ -358,7 +370,7 @@ export default function createListComponent({
           },
         },
         createElement(innerElementType || innerTagName || 'div', {
-          children: items,
+          children: portaledItems?portaledItems:items,
           ref: innerRef,
           style: {
             height: isHorizontal ? '100%' : estimatedTotalSize,
